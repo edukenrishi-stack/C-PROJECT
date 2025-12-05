@@ -1,0 +1,96 @@
+graph TD
+    Start([Start Game]) --> Init[Initialize Players & Boards]
+    Init --> LoadPrompt{Ask: Load<br/>Previous Game?}
+    
+    LoadPrompt -->|Yes| LoadGame[Load Game from File]
+    LoadGame --> LoadCheck{Load<br/>Successful?}
+    LoadCheck -->|Yes| GameLoop
+    LoadCheck -->|No| NewGame[Start New Game]
+    LoadPrompt -->|No| NewGame
+    
+    NewGame --> HumanSetup[Human: Place Ships Manually]
+    HumanSetup --> AISetup[AI: Auto-Place Ships]
+    AISetup --> GameLoop
+    
+    GameLoop{Game Won?}
+    GameLoop -->|No| CheckTurn{Current Player<br/>Type?}
+    
+    CheckTurn -->|Human| DisplayBoards[Display Tracking & Primary Boards]
+    DisplayBoards --> ShowFleet[Show Fleet Status]
+    ShowFleet --> GetInput[Get Target Input or Save Command]
+    
+    GetInput --> ValidateInput{Valid<br/>Input?}
+    ValidateInput -->|No| GetInput
+    ValidateInput -->|Save| SaveGame[Save Game to File]
+    SaveGame --> GetInput
+    
+    ValidateInput -->|Valid Coordinates| CheckTarget{Already<br/>Targeted?}
+    CheckTarget -->|Yes| GetInput
+    CheckTarget -->|No| HumanShot[Process Shot]
+    
+    HumanShot --> UpdateTracking[Update Tracking Board]
+    UpdateTracking --> CheckHit{Hit or<br/>Miss?}
+    
+    CheckHit -->|Hit| IncrementHits[Increment Hit Counter]
+    IncrementHits --> UpdateShip[Update Ship Status]
+    UpdateShip --> CheckSunk{Ship<br/>Destroyed?}
+    CheckSunk -->|Yes| ShowSunk[Display 'Ship Destroyed!']
+    CheckSunk -->|No| ShowHit[Display 'Hit!']
+    ShowSunk --> CheckWinHuman
+    ShowHit --> CheckWinHuman
+    
+    CheckHit -->|Miss| ShowMiss[Display 'Miss!']
+    ShowMiss --> CheckWinHuman
+    
+    CheckWinHuman{All Enemy<br/>Ships Sunk?}
+    CheckWinHuman -->|Yes| GameWon
+    CheckWinHuman -->|No| SwitchPlayer[Switch to Next Player]
+    
+    CheckTurn -->|AI| AIMode{AI Mode?}
+    
+    AIMode -->|Hunt Mode| RandomShot[Generate Random<br/>Untargeted Coordinates]
+    AIMode -->|Target Mode| QueueCheck{Target Queue<br/>Empty?}
+    
+    QueueCheck -->|Yes| SwitchToHunt[Switch to Hunt Mode]
+    SwitchToHunt --> RandomShot
+    QueueCheck -->|No| PopQueue[Get Coordinates from Queue]
+    
+    RandomShot --> AIShot[Process AI Shot]
+    PopQueue --> AIShot
+    
+    AIShot --> AIUpdateTracking[Update AI Tracking Board]
+    AIUpdateTracking --> AICheckHit{Hit or<br/>Miss?}
+    
+    AICheckHit -->|Hit| AIIncrementHits[Increment Hit Counter]
+    AIIncrementHits --> AIUpdateShip[Update Ship Status]
+    AIUpdateShip --> AICheckSunk{Ship<br/>Destroyed?}
+    
+    AICheckSunk -->|Yes| AIShowSunk[Display 'Ship Destroyed!']
+    AIShowSunk --> ClearQueue[Clear Target Queue<br/>Switch to Hunt Mode]
+    ClearQueue --> CheckWinAI
+    
+    AICheckSunk -->|No| AddAdjacent[Add Adjacent Cells<br/>to Target Queue]
+    AddAdjacent --> SwitchToTarget[Switch to Target Mode]
+    SwitchToTarget --> AIShowHit[Display 'Hit!']
+    AIShowHit --> CheckWinAI
+    
+    AICheckHit -->|Miss| AIShowMiss[Display 'Miss!']
+    AIShowMiss --> CheckWinAI
+    
+    CheckWinAI{All Enemy<br/>Ships Sunk?}
+    CheckWinAI -->|Yes| GameWon
+    CheckWinAI -->|No| SwitchPlayer
+    
+    SwitchPlayer --> GameLoop
+    
+    GameWon[Display Winner & Stats]
+    GameWon --> WriteSummary[Write Game Summary to File]
+    WriteSummary --> DeleteSave[Delete Save File]
+    DeleteSave --> End([End Game])
+    
+    style Start fill:#90EE90
+    style End fill:#FFB6C1
+    style GameWon fill:#FFD700
+    style AIMode fill:#87CEEB
+    style CheckTurn fill:#DDA0DD
+    style GameLoop fill:#F0E68C
